@@ -1,0 +1,27 @@
+﻿{
+  "effects-selection-gui-title-bar": "Effects selection",
+  "walkspeed": "Walks acceleration",
+  "regeneration": "Regeneration",
+  "miningslow": "Mining slow",
+  "miningspeed": "Mining acceleration",
+  "walkslow": "Walk slow",
+  "weakmelee": "Melee weakness",
+  "strengthmelee": "Melee strength",
+  "bleeding": "Bleeding",
+  "thorns": "Thorns",
+  "safefall": "Safefall",
+  "firedamageimmune": "Fire immune",
+  "forgetting": "Class forgetting",
+  "invisibility": "Invisibility",
+  "temporalstabilityrestore": "Temporal restore",
+  "canweightbuff": "Weight bonus",
+  "cantemporalcharge": "Temporal charge",
+  "extendedmaxbreath": "Underwater breath",
+
+  "gui-type-playername": "Player's name",
+  "gui-type-tier": "Effect's tier",
+  "gui-type-duration-minutes": "Duration(minutes)",
+  "gui-apply": "Apply",
+  "effect-set-to-player-tier-duration": "Effect {0} applied on {1} with tier {2} for {3} minutes."
+
+}
