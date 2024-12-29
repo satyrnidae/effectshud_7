@@ -155,9 +155,11 @@ namespace effectshud.src
         {
             bool found = false;
             var codes = new List<CodeInstruction>(instructions);
-            var decMethod = AccessTools.GetDeclaredMethods(typeof(IWorldAccessor))
-            .Where(m => m.Name == "SpawnItemEntity" && m.GetParameters().Types().Contains(typeof(ItemStack)) && m.GetParameters().Types().Contains(typeof(Vec3d)) && m.GetParameters().Types().Contains(typeof(Vec3d)))
-            .Single();
+
+            var decMethod = typeof(IWorldAccessor).GetMethod("SpawnItemEntity", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic,
+                null,
+                new[] { typeof(ItemStack), typeof(Vec3d), typeof(Vec3d) },
+                null);
             var proxyMethod = AccessTools.Method(typeof(harmPatch), "addNameAndProcessMadeTool");
             for (int i = 0; i < codes.Count; i++)
             {

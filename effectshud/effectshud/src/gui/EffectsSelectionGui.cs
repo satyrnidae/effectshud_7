@@ -22,7 +22,8 @@ namespace effectshud.src.gui
         public EffectsSelectionGui(ICoreClientAPI capi) : base(capi)
         {
             SetupDialog();
-            clientEventManager = (ClientEventManager)typeof(ClientMain).GetField("eventManager", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(capi.World as ClientMain);
+
+            clientEventManager = (ClientEventManager)typeof(ClientMain).GetField("eventManager").GetValue(capi.World as ClientMain);
         }
         private void SetupDialog()
         {
