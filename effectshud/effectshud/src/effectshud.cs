@@ -27,13 +27,14 @@ namespace effectshud.src
         public static bool showHUD = true;
         internal static IClientNetworkChannel clientChannel;
         public static Dictionary<string, EffectClientData> clientsActiveEffects;
-        HUDEffects effectsHUD;
+        public HUDEffects effectsHUD;
         public static Dictionary<string, bool> effectsPosNeg;
         public static Dictionary<string, bool> effectsShouldBeRendered;
         internal static IServerNetworkChannel serverChannel;
         public static bool redrawEffectPictures = true;
         public static HashSet<string> invisiblePlayers;
         public static EffectsSelectionGui effectsSelectionGui { get; set; }
+        public static Config config;
         public override void Start(ICoreAPI api)
         {
             base.Start(api);
@@ -46,11 +47,15 @@ namespace effectshud.src
             effectsPosNeg = new Dictionary<string, bool>();
             effectsShouldBeRendered = new Dictionary<string, bool>();
             invisiblePlayers = new HashSet<string>();
+            loadConfig(api);
         }
         public override void StartClientSide(ICoreClientAPI api)
         {
             capi = api;
             base.StartClientSide(api);
+            //var c =
+               /* Environment.SetEnvironmentVariable("TEXTURE_DEBUG_DISPOSE", "1");
+            var c = Environment.GetEnvironmentVariable("CAIRO_DEBUG_DISPOSE");*/
             api.Gui.RegisterDialog((GuiDialog)new HUDEffects((ICoreClientAPI)api));
             harmonyInstance = new Harmony(harmonyID);
             api.Input.RegisterHotKey("effectsghud", "Show effects hud", GlKeys.L, HotkeyType.GUIOrOtherControls);
@@ -98,10 +103,12 @@ namespace effectshud.src
                                     ecd.infinite = it.infinite;
                                     ecd.duration = it.duration;
                                     ecd.typeId = it.typeId; 
+                                    ecd.positive = it.positive;
                                 }
                                 else
                                 {
                                     ebef.onlyClientsActiveEffects[it.typeId] = it;
+                                    effectsHUD?.CellsGrid?.AddEffectCell(it);                                    
                                 }
                             }
                         }
@@ -119,6 +126,7 @@ namespace effectshud.src
                             {
                                 if (ebef.onlyClientsActiveEffects.TryGetValue(effToRemove, out EffectClientData ecd))
                                 {
+                                    effectsHUD?.CellsGrid?.RemoveEffectCell(ecd.typeId);
                                     ebef.onlyClientsActiveEffects.Remove(effToRemove);
                                 }
                             }
@@ -126,11 +134,17 @@ namespace effectshud.src
                     }
                 }
 
-               
-                if (showHUD && effectsHUD != null)
+                effectsHUD?.ComposeGuis();
+                if (packet?.typeIdsToRemove?.Count > 0 && effectsHUD != null)
+                {                    
+                    //effectsHUD?.ComposeGuis();
+                }
+
+                //effectsHUD = new HUDEffects(capi);
+                /*if (showHUD && effectsHUD != null)
                 {
                     effectsHUD.ComposeGuis();
-                }
+                }*/
             });
             RegisterClientEffectData("regeneration");
             RegisterClientEffectData("miningslow", false);
@@ -149,6 +163,9 @@ namespace effectshud.src
             RegisterClientEffectData("canweightbuff");
             RegisterClientEffectData("cantemporalcharge");
             RegisterClientEffectData("extendedmaxbreath");
+
+            effectsHUD = new HUDEffects(capi);
+            effectsHUD.TryOpen();
             //cantemporalcharge
             //RegisterClientEffectData("vampirism", new string[] { });
         }
@@ -204,6 +221,14 @@ namespace effectshud.src
                     Effect ef = (Effect)Activator.CreateInstance(effectType);
                     ef.SetExpiryInRealMinutes(durationMin);
                     ef.Tier = tier;
+                    if(effectshud.effectsPosNeg.TryGetValue(ef.effectTypeId, out bool posneg))
+                    {
+                        ef.positive = posneg;
+                    }
+                    else
+                    {
+                        ef.positive = true;
+                    }
                     ApplyEffectOnEntity(it.Entity, ef);
                     tcr.StatusMessage = "effectshud:effect-set-to-player-tier-duration";
                     tcr.MessageParams = new object[] {effectType.Name, it.PlayerName, tier, durationMin }; 
@@ -340,9 +365,9 @@ namespace effectshud.src
                 }
                 if(showHUD)
                 {
-                    //effectsHUD = new HUDEffects(capi);
-                    //effectsHUD.ComposeGuis();
-                    // effectsHUD.TryOpen();
+                    effectsHUD = new HUDEffects(capi);
+                   // effectsHUD.ComposeGuis();
+                    //effectsHUD.TryOpen();
                 }
                 
                 if (startPointCoords != -1 && startPointMap != -1)
@@ -408,6 +433,24 @@ namespace effectshud.src
                 effectsSelectionGui.Dispose();
                 effectsSelectionGui = null;
             }
+        }
+        private void loadConfig(ICoreAPI api)
+        {
+            config = null;
+            try
+            {
+                config = api.LoadModConfig<Config>("effectshud.json");
+            }
+            catch (Exception e)
+            {
+
+            }
+            if(config == null)
+            {
+                config = new Config();
+            }
+            api.StoreModConfig<Config>(config, "effectshud.json");
+
         }
         public static double Now { get { return sapi.World.Calendar.TotalDays; } }
     }

@@ -34,7 +34,7 @@ namespace effectshud.src
     {
         public Dictionary<string, Effect> activeEffects = new Dictionary<string, Effect>();
         public Dictionary<string, EffectClientData> onlyClientsActiveEffects = new Dictionary<string, EffectClientData>();
-        List<string> effectsToRemove = new List<string>();
+        HashSet<string> effectsToRemove = new HashSet<string>();
         ITreeAttribute effectsTree;
         JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto };
         public bool needUpdate { get; set; } = false;
@@ -126,10 +126,10 @@ namespace effectshud.src
         {
             base.OnGameTick(deltaTime);
             
-             if (entity.Api.Side == EnumAppSide.Server) {
+            if (entity.Api.Side == EnumAppSide.Server) {
                 double now = Now;
                 accum += deltaTime;
-                if (accum > Config.Current.TICK_EVERY_SECONDS.Val)
+                if (accum > effectshud.config.TICK_EVERY_SECONDS)
                 {
                     accum = 0;
                     
@@ -158,43 +158,79 @@ namespace effectshud.src
                         SendActiveEffectsToClient(effectsToRemove);
                         effectsToRemove.Clear();
                         //SendActiveEffectsToClient();
+                    }                  
+                }
+            }
+            else
+            {
+                bool effectRemoved = false;
+                accum += deltaTime;
+                if (accum > 0.5f)
+                {
+                    accum = 0;
+
+                    foreach (var effect in onlyClientsActiveEffects.ToArray())
+                    {
+                        effect.Value.duration -= accum;
+
+                        if (effect.Value.duration < 0)
+                        {
+                            onlyClientsActiveEffects.Remove(effect.Key);
+                            effectRemoved = true;
+                        }
                     }
-
-                    
-
+                }
+                if(effectRemoved)
+                {
+                    effectshud.capi.Event.RegisterCallback((dt =>
+                    {
+                        effectshud effectsHUD = effectshud.capi.ModLoader.GetModSystem<effectshud>();
+                        effectsHUD.effectsHUD?.ComposeGuis();
+                    }), 0
+                    );
                 }
             }
         }
         
         public override void OnEntityDeath(DamageSource damageSourceForDeath)
         {
-            
             foreach (var it in activeEffects.Values.ToArray())
             {
-                it.OnDeath();
+                if(it.OnDeath())
+                {
+                    this.effectsToRemove.Add(it.effectTypeId);
+                }
             }
 
-            if (needUpdate)
+            if (this.needUpdate)
             {
-                SendActiveEffectsToClient(null);
+                SendActiveEffectsToClient(this.effectsToRemove);
             }
+            this.effectsToRemove.Clear();
             needUpdate = false;
             //base.OnEntityDeath(damageSourceForDeath);
             //remove effects which not stay after death
         }
 
-        public void SendActiveEffectsToClient(List<string> effectsTypeIdsToRemove, Effect ef = null)
+        public void SendActiveEffectsToClient(HashSet<string> effectsTypeIdsToRemove, Effect ef = null)
         {
             List<EffectClientData> effectData = new List<EffectClientData>();
             if (ef != null)
             {
-                effectData.Add(new EffectClientData { typeId = ef.effectTypeId, duration = ef.ExpireTimestampInDays == double.PositiveInfinity ? (ef.ExpireTick - ef.TickCounter) : (int)(ef.ExpireTimestampInDays * 24 * 60 * 60), tier = ef.Tier, infinite = ef.infinite });
+                effectData.Add(
+                    new EffectClientData { typeId = ef.effectTypeId,
+                                           duration = ef.ExpireTimestampInDays == double.PositiveInfinity 
+                                                    ? (ef.ExpireTick - ef.TickCounter) 
+                                                    : (int)(ef.ExpireTimestampInDays * 24 * 60 * 60),
+                                           tier = ef.Tier, infinite = ef.infinite,
+                                           positive = ef.positive
+                                         });
             }
             else
             {
                 foreach (var it in activeEffects.Values)
                 {
-                    effectData.Add(new EffectClientData { typeId = it.effectTypeId, duration = it.ExpireTimestampInDays == double.PositiveInfinity ? (it.ExpireTick - it.TickCounter) : (int)(it.ExpireTimestampInDays * 24 * 60 * 60), tier = it.Tier, infinite = it.infinite });
+                    effectData.Add(new EffectClientData { typeId = it.effectTypeId, duration = it.ExpireTimestampInDays == double.PositiveInfinity ? (it.ExpireTick - it.TickCounter) : (int)(it.ExpireTimestampInDays * 24 * 60 * 60), tier = it.Tier, infinite = it.infinite, positive = it.positive });
                 }
             }
             var packetToSend = new EffectsSyncPacket()

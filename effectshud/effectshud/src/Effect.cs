@@ -92,7 +92,7 @@ namespace effectshud.src
 
         public void SetExpiryInRealSeconds(int deltaSeconds)
         {
-            SetExpiryInTicks((int)Math.Ceiling(deltaSeconds / Config.Current.TICK_EVERY_SECONDS.Val));
+            SetExpiryInTicks((int)Math.Ceiling(deltaSeconds / effectshud.config.TICK_EVERY_SECONDS));
         }
 
         public void SetExpiryInRealMinutes(int deltaMinutes)
@@ -129,18 +129,20 @@ namespace effectshud.src
             
            // BuffManager.RemoveBuff(entity, this)
         }
-        public virtual void OnDeath()
+        public virtual bool OnDeath()
         {
             EBEffectsAffected ebea = entity.GetBehavior<EBEffectsAffected>();
             if (ebea == null)
             {
-                return;
+                return false;
             }
             if (this.removedAfterDeath)
             {
                 ebea.activeEffects.Remove(this.effectTypeId);
                 ebea.needUpdate = true;
+                return true;
             }
+            return false;
         }
 
         public virtual void OnRevive()

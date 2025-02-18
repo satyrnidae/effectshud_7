@@ -36,15 +36,6 @@ namespace effectshud.src.DefaultEffects
                 }
             }
         }
-        public override void OnDeath()
-        {
-            EBEffectsAffected ebea = entity.GetBehavior<EBEffectsAffected>();
-            if (ebea == null)
-            {
-                return;
-            }
-            ebea.activeEffects.Remove(this.effectTypeId);
-        }
     }
 }
 

@@ -44,15 +44,21 @@ namespace effectshud.src.DefaultEffects
         {
             entity.Stats.Set("meleeWeaponsDamage", "effectshudweakmelee", 0);
         }
-        public override void OnDeath()
+        public override bool OnDeath()
         {
             entity.Stats.Set("meleeWeaponsDamage", "effectshudweakmelee", 0);
             EBEffectsAffected ebea = entity.GetBehavior<EBEffectsAffected>();
             if (ebea == null)
             {
-                return;
+                return false;
             }
-            ebea.activeEffects.Remove(this.effectTypeId);
+            if (this.removedAfterDeath)
+            {
+                ebea.activeEffects.Remove(this.effectTypeId);
+                ebea.needUpdate = true;
+                return true;
+            }
+            return false;
         }
     }
 }

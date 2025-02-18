@@ -11,8 +11,9 @@ namespace effectshud.src
     public class EffectClientData
     {
         public string typeId;
-        public int duration;
+        public double duration;
         public int tier;
         public bool infinite;
+        public bool positive;
     }
 }

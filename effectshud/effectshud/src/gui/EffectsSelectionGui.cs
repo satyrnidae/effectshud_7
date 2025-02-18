@@ -52,15 +52,15 @@ namespace effectshud.src.gui
               .WithFixedHeight(40);
 
             ElementBounds effectDurationTextBounds = ElementBounds.FixedPos(EnumDialogArea.LeftTop, 0, 230)
-             .WithFixedWidth(160)
+             .WithFixedWidth(180)
              .WithFixedHeight(40);
 
             ElementBounds effectDurationBounds = ElementBounds.FixedPos(EnumDialogArea.LeftTop, 0, 260)
               .WithFixedWidth(160)
               .WithFixedHeight(40);
 
-            ElementBounds applyBounds = ElementBounds.FixedPos(EnumDialogArea.LeftTop, 0, 310)
-              .WithFixedWidth(50)
+            ElementBounds applyBounds = ElementBounds.FixedPos(EnumDialogArea.LeftTop, 0, 320)
+              .WithFixedWidth(60)
               .WithFixedHeight(40);
 
             bgBounds.WithChildren(effectNameBounds, playerNameBounds, effectTierBounds, effectDurationBounds, applyBounds);
@@ -69,7 +69,9 @@ namespace effectshud.src.gui
                 .AddShadedDialogBG(bgBounds)
                 .AddDialogTitleBar(Lang.Get("effectshud:effects-selection-gui-title-bar"), () => OnTitleBarCloseClicked())
                 .BeginChildElements(bgBounds);
-            SingleComposer.AddDropDown(GetEffectsCodes(), GetEffectsNames(), 0, didSelectEntity, effectNameBounds);
+            SingleComposer.AddDropDown(GetEffectsCodes(), GetEffectsNames(), 0, didSelectEntity, effectNameBounds, "effectnamedropdown");
+
+            this.collectedEffectCode = GetEffectsCodes()[0];
 
             SingleComposer.AddStaticText(Lang.Get("effectshud:gui-type-playername"), CairoFont.WhiteSmallishText(), playerNameTextBounds);
 
@@ -143,7 +145,7 @@ namespace effectshud.src.gui
             if (this.collectedEffectCode != "")
             {
                 clientEventManager.TriggerNewClientChatLine(GlobalConstants.CurrentChatGroup, string.Format("/ef {0} {1} {2} {3}", collectedEffectCode, collectedIntValueDuration, collectedIntValueTier, collectedStringValuePlayerName), Vintagestory.API.Common.EnumChatType.Macro, "");
-                collectedEffectCode = "";
+                //collectedEffectCode = "";
             }
             return true;
         }
